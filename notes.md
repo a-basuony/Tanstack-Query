@@ -144,9 +144,16 @@
                 {content}
         )
 
-# 4-
+# 4- useMutation
+
+    Mutation Function:
+        This is the function that performs the data-modifying operation, such as an HTTP POST, PUT, PATCH, or DELETE request.
 
 # Summary
+
+    we only use (useQuery ) to (get request) the data
+    (useMutation) is a hook designed to handle operations that change data on the server, such as creating, updating, or deleting resources (POST, PUT, PATCH, or DELETE request).
+    Unlike (useQuery), which is used for fetching and (get request) (read) the data
 
 # => Install @tanstack/react-query.
 
