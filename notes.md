@@ -144,10 +144,152 @@
                 {content}
         )
 
-# 4- useMutation
+# 4- useMutation create, update, edit, delete (POST , UPDATE, PUT, PATCH, DELETE)
 
     Mutation Function:
         This is the function that performs the data-modifying operation, such as an HTTP POST, PUT, PATCH, or DELETE request.
+
+
+        (POST)
+
+            1=> import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
+                import { QueryClient } from "@tanstack/react-query";
+
+                const queryClient = new QueryClient();
+                const navigate = useNavigate();
+
+            2=> const { mutate, isPending, isError, error } = useMutation({
+                        mutationFn: createNewEvent,
+                        onSuccess: () => {
+                            queryClient.invalidateQueries({ queryKey: ["events"] }); // ensure the data (read) is up to date
+                            navigate("/events"); // to navigate after create
+                        },
+                    });
+
+                    -queryClient.invalidateQueries({ queryKey: ["events"] });
+                            to ensure that your application displays the up-to-date information after a mutation ( creating, updating, or deleting data).
+                            ensure that your application's data remains consistent and up-to-date with the server
+                            providing a better user experience.
+            3=>
+                 function handleSubmit(formData) {
+                        mutate(formData);
+                    }
+
+                - mutate(formData)
+                    mutate(formData) is used to send a request to create a new event with the data collected from a form.
+                    to execute a mutation with the provided data.
+                    triggers the mutation function (createNewEvent) with the provided formData.
+
+
+            4=> Submit the form
+                <From onSubmit={handleSubmit}>
+                    {isPending && "Submitting..."}
+                    {isError && "Error: " + error.message}
+                    <button type="submit">Create Event</button>
+                </Form>
+
+
+            5=> export async function createNewEvent(eventData) {
+                        const response = await fetch(`http://localhost:3000/events`, {
+                            method: "POST",
+                            body: JSON.stringify(eventData),
+                            headers: {
+                            "Content-Type": "application/json",
+                            },
+                        });
+
+                        if (!response.ok) {
+                            const error = new Error("An error occurred while creating the event");
+                            error.code = response.status;
+                            error.info = await response.json();
+                            throw error;
+                        }
+
+                        const { event } = await response.json();
+
+                        return event;
+                    }
+
+# 5- useQuery ( read (get) a specific event or single product)
+
+    1=> const { id } = useParams();
+
+    2=> const { data, isLoading, isError, error } = useQuery({
+                queryKey: ["event", id], // Include id in the queryKey to make it a complex to not cache and use the same id for the same data
+                queryFn: ({ signal }) => fetchEvent({ signal, id }),
+            });
+
+    3=> {isLoading && <p>Loading...</p>}
+        {isError && <ErrorComp title={error.message}>}
+        {data && <h1>{data.title}</h1>}
+
+    4=> export async function fetchEvent({ signal, id }) {
+                const response = await fetch(`http://localhost:3000/events/${id}`, {
+                    signal,
+                });
+                if (!response.ok) {
+                    const error = new Error("An error occurred while fetching the event");
+                    error.code = response.status;
+                    error.info = await response.json();
+                    throw error;
+                }
+                const { event } = await response.json();
+                return event;
+        }
+
+# 6-useMutation for Delete (DELETE)
+
+    1=>
+        const { id } = useParams();
+        const queryClient = new QueryClient();
+        const navigate = useNavigate();
+
+        <!-- const {mutate, isPending, isError, error} = useMutation({ --> // another way
+        <!-- const {mutate, isPending: loadingDelete, isError: isErrorDelete, error: errorDelete} = useMutation({ --> // another way
+        const mutation = useMutation({
+                mutationFn: deleteEvent,
+                onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["events"] });
+                navigate("/events");
+                },
+            });
+
+    2=>  function handleDelete() {
+            mutation.mutate({ id }); // Ensure id is passed as an object
+        }
+
+    3=> <button onClick={handleDelete} className="button">
+                Delete
+              </button>
+
+    4=>
+          {mutation.isPending && <p>Deleting, please wait...</p>}
+          {!mutation.isPending && (
+            <div className="form-action">
+              <button onClick={handleEndDelete} className="button-text">
+                Cancel
+              </button>
+              <button onClick={handleDelete} className="button">
+                Delete
+              </button>
+            </div>
+          )}
+          {mutation.isError && (<ErrorBlock title={error.info?.message || "an error occurred"}/>) }
+
+
+    3=> export async function deleteEvent({ id }) {
+            const response = await fetch(`http://localhost:3000/events/${id}`, {
+                method: "DELETE",
+            });
+            if (!response.ok) {
+                const error = new Error("An error occurred while deleting the event");
+                error.code = response.status;
+                error.info = await response.json();
+                throw error;
+            }
+            const { event } = await response.json();
+            return event;
+        }
 
 # Summary
 
@@ -166,3 +308,13 @@
 # => Use useMutation for data modifications.
 
 # => Integrate components into your main app.
+
+            import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+            const queryClient = new QueryClient();
+
+            ReactDOM.render(
+                <QueryClientProvider client={queryClient}>
+                    <App />
+                </QueryClientProvider>
+            )

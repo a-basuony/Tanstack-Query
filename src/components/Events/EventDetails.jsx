@@ -42,6 +42,7 @@ export default function EventDetails() {
       console.error("Event ID is not defined");
     }
   }
+
   let formattedDate;
   if (data) {
     formattedDate = new Date(data.date).toLocaleDateString("en-US", {
