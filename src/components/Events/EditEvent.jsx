@@ -12,16 +12,34 @@ export default function EditEvent() {
   const { id } = useParams();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["events"],
+    queryKey: ["events", id],
     queryFn: ({ signal }) => fetchEvent({ signal, id }),
   });
 
   const { mutate } = useMutation({
     mutationFn: updateEvent,
-    // onSuccess: () => {
-    //   queryClient.invalidateQueries({ queryKey: ["events"] });
-    //   navigate("../");
-    // },
+    onMutate: async (data) => {
+      const newEvent = data.event; // fromData
+
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: ["events", id] });
+      // Snapshot the previous value
+      const previousEvent = queryClient.getQueryData([["events", id]]);
+
+      // Optimistically update to the new value
+      queryClient.setQueryData(["events", id], newEvent);
+
+      // Return a context object with the snapshotted value
+      return { previousEvent };
+    },
+    onError: (err, newEvent, context) => {
+      // If the mutation fails, use the context returned from onMutate to roll back
+      queryClient.setQueryData(["events", newEvent.id], context.previousEvent);
+    },
+    onSettled: (newEvent) => {
+      // Always refetch after error or success to ensure we have the latest data
+      queryClient.invalidateQueries(["events", newEvent.id]);
+    },
   });
 
   function handleSubmit(formData) {
