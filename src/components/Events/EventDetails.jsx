@@ -1,11 +1,15 @@
+import { useState } from "react";
 import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
 import Header from "../Header.jsx";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { deleteEvent, fetchEvent, queryClient } from "../../utils/fetch.js";
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
 import ErrorBlock from "../UI/ErrorBlock.jsx";
+import Modal from "./../UI/Modal";
 
 export default function EventDetails() {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const { id } = useParams();
   const navigate = useNavigate();
   // const queryClient = useQueryClient();
@@ -22,6 +26,14 @@ export default function EventDetails() {
       navigate("/events");
     },
   });
+
+  function handleStartDelete() {
+    setIsDeleting(true);
+  }
+
+  function handleEndDelete() {
+    setIsDeleting(false);
+  }
 
   function handleDelete() {
     if (id) {
@@ -41,6 +53,35 @@ export default function EventDetails() {
 
   return (
     <>
+      {isDeleting && (
+        <Modal>
+          <h2>Are you Sure about Deleting?</h2>
+          <p>
+            Do you really want to delete this event? This action cannot be
+            undone
+          </p>
+          {mutation.isPending && <p>Deleting, please wait...</p>}
+          {!mutation.isPending && (
+            <div className="form-action">
+              <button onClick={handleEndDelete} className="button-text">
+                Cancel
+              </button>
+              <button onClick={handleDelete} className="button">
+                Delete
+              </button>
+            </div>
+          )}
+          {mutation.isError && (
+            <ErrorBlock
+              title="Failed to delete event"
+              message={
+                mutation.error.info?.message ||
+                "Failed to delete event, please try again later"
+              }
+            />
+          )}
+        </Modal>
+      )}
       <Outlet />
       <Header>
         <Link to="/events" className="nav-item">
@@ -58,9 +99,7 @@ export default function EventDetails() {
             <header>
               <h1>{data.title}</h1>
               <nav>
-                <button onClick={handleDelete} disabled={mutation.isLoading}>
-                  {mutation.isLoading ? "Deleting..." : "Delete"}
-                </button>
+                <button onClick={handleStartDelete}>Delete</button>
                 <Link to="edit">Edit</Link>
               </nav>
             </header>
@@ -88,12 +127,6 @@ export default function EventDetails() {
               message={error.info?.message || "Failed to fetch event"}
             />
           </div>
-        )}
-        {mutation.isError && (
-          <ErrorBlock
-            title="An error occurred"
-            message={mutation.error.message || "Failed to delete event"}
-          />
         )}
       </article>
     </>
