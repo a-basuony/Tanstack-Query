@@ -41,7 +41,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-// const queryClient = new QueryClient();
+// const queryClient = new QueryClient(); instead we import it from fetch.js file that we make it global to use it in several files
 
 function App() {
   return (

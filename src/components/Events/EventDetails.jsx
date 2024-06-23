@@ -11,7 +11,7 @@ export default function EventDetails() {
   // const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["event", id], // Include id in the queryKey
+    queryKey: ["event", id], // Include id in the queryKey to make it a complex to not cache and use the same id for the same data
     queryFn: ({ signal }) => fetchEvent({ signal, id }),
   });
 
@@ -30,6 +30,14 @@ export default function EventDetails() {
       console.error("Event ID is not defined");
     }
   }
+  let formattedDate;
+  if (data) {
+    formattedDate = new Date(data.date).toLocaleDateString("en-US", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
 
   return (
     <>
@@ -40,7 +48,11 @@ export default function EventDetails() {
         </Link>
       </Header>
       <article id="event-details">
-        {isLoading && <LoadingIndicator />}
+        {isLoading && (
+          <div id="event-details-content" className="center">
+            <LoadingIndicator />
+          </div>
+        )}
         {!isLoading && data && (
           <>
             <header>
@@ -61,7 +73,7 @@ export default function EventDetails() {
                 <div>
                   <p id="event-details-location">{data.location}</p>
                   <time dateTime={`${data.date}T${data.time}`}>
-                    {data.date} @ {data.time}
+                    {formattedDate} @ {data.time}
                   </time>
                 </div>
                 <p id="event-details-description">{data.description}</p>
@@ -70,10 +82,12 @@ export default function EventDetails() {
           </>
         )}
         {isError && (
-          <ErrorBlock
-            title="An error occurred"
-            message={error.info?.message || "Failed to fetch event"}
-          />
+          <div id="event-details-content" className="center">
+            <ErrorBlock
+              title="An error occurred"
+              message={error.info?.message || "Failed to fetch event"}
+            />
+          </div>
         )}
         {mutation.isError && (
           <ErrorBlock
