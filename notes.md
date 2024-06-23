@@ -291,6 +291,188 @@
             return event;
         }
 
+# 7- useMutation with update (PUT)
+
+Certainly! Let's dive deeper into the Update mutation setup in this component:
+
+```javascript
+const { mutate } = useMutation({
+  mutationFn: updateEvent,
+  onMutate: async (data) => {
+    const newEvent = data.event;
+    await queryClient.cancelQueries({ queryKey: ["events", id] });
+    const previousEvent = queryClient.getQueryData([["events", id]]);
+    queryClient.setQueryData(["events", id], newEvent);
+    return { previousEvent };
+  },
+  onError: (err, newEvent, context) => {
+    queryClient.setQueryData(["events", newEvent.id], context.previousEvent);
+  },
+  onSettled: (newEvent) => {
+    queryClient.invalidateQueries(["events", newEvent.id]);
+  },
+});
+```
+
+This setup uses React Query's `useMutation` hook to manage the event update process. Let's break it down:
+
+1. `mutationFn: updateEvent`:
+   This specifies the function that will be called to perform the actual API request. `updateEvent` is likely an async function that sends a PUT or PATCH request to your backend.
+
+2. `onMutate`: This function runs before the mutation function is fired. It's used to perform optimistic updates and setup for potential rollbacks:
+
+   - `const newEvent = data.event;`: Extracts the new event data from the mutation parameters.
+
+   - `await queryClient.cancelQueries({ queryKey: ["events", id] });`: Cancels any in-flight queries for this event to prevent them from overwriting our optimistic update.
+
+   - `const previousEvent = queryClient.getQueryData([["events", id]]);`: Retrieves the current data for this event from the cache.
+
+   - `queryClient.setQueryData(["events", id], newEvent);`: Updates the cache with the new event data immediately, before the server responds.
+
+   - `return { previousEvent };`: Returns the previous event data, which will be passed to `onError` if the mutation fails.
+
+3. `onError`: This function runs if the mutation encounters an error:
+
+   - It rolls back the optimistic update by setting the query data back to the previous event.
+
+4. `onSettled`: This function runs after the mutation is either successful or encounters an error:
+
+   - It invalidates the query for this event, which will cause React Query to refetch the latest data from the server, ensuring that the client has the most up-to-date information.
+
+The `mutate` function extracted from `useMutation` is then used in the `handleSubmit` function:
+
+```javascript
+function handleSubmit(formData) {
+  mutate({ id, event: formData });
+  navigate("../");
+}
+```
+
+When `mutate` is called:
+
+1. The `onMutate` function runs, performing the optimistic update.
+2. The `updateEvent` function is called to send the update to the server.
+3. If successful, the cache remains updated with the new data.
+4. If an error occurs, `onError` runs to roll back the update.
+5. Finally, `onSettled` runs to ensure the cache is up-to-date.
+
+This approach provides a smooth user experience by immediately reflecting changes in the UI, while still ensuring data consistency with the backend. If an error occurs, it gracefully rolls back the changes, maintaining data integrity.
+
+---
+
+Explanation:
+
+    onMutate:
+            Cancels any ongoing queries for the same event to prevent conflicts.
+            Stores the current data as previousEvent.
+            Updates the cached data optimistically.
+            Returns the previousEvent in the context for potential rollback.
+
+
+    onError:
+            Called if the mutation fails.
+            Rolls back to the previous data using the context from onMutate.
+
+
+    onSettled:
+            Called after the mutation, regardless of success or failure.
+            Invalidates the query to ensure the frontend has the most up-to-date data from the backend.
+
+
+            Certainly! I'll explain this EditEvent component step by step:
+
+1. Import statements:
+   The component imports necessary hooks from react-router-dom, UI components, and React Query hooks.
+
+2. Component definition:
+
+   ```javascript
+   export default function EditEvent() {
+   ```
+
+   This defines the EditEvent component.
+
+3. Hooks setup:
+
+   ```javascript
+   const navigate = useNavigate();
+   const { id } = useParams();
+   ```
+
+   - `useNavigate` is used for programmatic navigation.
+   - `useParams` extracts the 'id' parameter from the URL.
+
+4. Fetching event data:
+
+   ```javascript
+   const { data, isLoading, isError, error } = useQuery({
+     queryKey: ["events", id],
+     queryFn: ({ signal }) => fetchEvent({ signal, id }),
+   });
+   ```
+
+   This uses React Query's `useQuery` to fetch event data based on the id.
+
+5. Update mutation setup:
+
+   ```javascript
+   const { mutate } = useMutation({
+     mutationFn: updateEvent,
+     // ... (onMutate, onError, onSettled)
+   });
+   ```
+
+   This sets up the mutation for updating the event, including optimistic updates.
+
+6. Optimistic update logic:
+
+   - `onMutate`: Cancels ongoing queries, stores the previous event data, and updates the cache optimistically.
+   - `onError`: Rolls back to the previous event data if the mutation fails.
+   - `onSettled`: Invalidates the query to refetch the latest data after the mutation.
+
+7. Form submission handler:
+
+   ```javascript
+   function handleSubmit(formData) {
+     mutate({ id, event: formData });
+     navigate("../");
+   }
+   ```
+
+   This triggers the update mutation and navigates back.
+
+8. Close handler:
+
+   ```javascript
+   function handleClose() {
+     navigate("../");
+   }
+   ```
+
+   This navigates back when closing the modal.
+
+9. Conditional rendering:
+   The component renders different content based on the query state:
+
+   - Loading state: Shows a loading indicator.
+   - Error state: Displays an error message.
+   - Data loaded: Renders the EventForm with the fetched data.
+
+10. Return statement:
+    ```javascript
+    return <Modal onClose={handleClose}>{content}</Modal>;
+    ```
+    The component wraps the conditionally rendered content in a Modal component.
+
+This component demonstrates a complete flow for editing an event:
+
+1. It fetches the existing event data.
+2. It provides a form to edit the event.
+3. On submission, it updates the event using an optimistic update strategy.
+4. It handles loading and error states appropriately.
+
+The use of React Query here provides efficient data fetching, caching, and updating, while the optimistic update approach gives a responsive user experience.
+
 # Summary
 
     we only use (useQuery ) to (get request) the data
