@@ -1,21 +1,35 @@
-import { Link, Outlet, useParams } from "react-router-dom";
-
+import { Link, Outlet, useNavigate, useParams } from "react-router-dom";
 import Header from "../Header.jsx";
-import { useQuery } from "@tanstack/react-query";
-import { fetchEvent } from "../../utils/fetch.js";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { deleteEvent, fetchEvent, queryClient } from "../../utils/fetch.js";
 import LoadingIndicator from "../UI/LoadingIndicator.jsx";
 import ErrorBlock from "../UI/ErrorBlock.jsx";
 
 export default function EventDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  // const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["event"],
-    id,
+    queryKey: ["event", id], // Include id in the queryKey
     queryFn: ({ signal }) => fetchEvent({ signal, id }),
   });
 
-  console.log(data);
+  const mutation = useMutation({
+    mutationFn: deleteEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      navigate("/events");
+    },
+  });
+
+  function handleDelete() {
+    if (id) {
+      mutation.mutate({ id }); // Ensure id is passed as an object
+    } else {
+      console.error("Event ID is not defined");
+    }
+  }
 
   return (
     <>
@@ -27,24 +41,25 @@ export default function EventDetails() {
       </Header>
       <article id="event-details">
         {isLoading && <LoadingIndicator />}
-        {!isLoading && (
+        {!isLoading && data && (
           <>
             <header>
               <h1>{data.title}</h1>
               <nav>
-                <button>Delete</button>
+                <button onClick={handleDelete} disabled={mutation.isLoading}>
+                  {mutation.isLoading ? "Deleting..." : "Delete"}
+                </button>
                 <Link to="edit">Edit</Link>
               </nav>
             </header>
             <div id="event-details-content">
               <img
                 src={`http://localhost:3000/${data.image}`}
-                alt={data.image}
+                alt={data.title}
               />
               <div id="event-details-info">
                 <div>
                   <p id="event-details-location">{data.location}</p>
-                  {/* <time dateTime={`Todo-DateT$Todo-Time`}>DATE @ TIME</time> */}
                   <time dateTime={`${data.date}T${data.time}`}>
                     {data.date} @ {data.time}
                   </time>
@@ -58,6 +73,12 @@ export default function EventDetails() {
           <ErrorBlock
             title="An error occurred"
             message={error.info?.message || "Failed to fetch event"}
+          />
+        )}
+        {mutation.isError && (
+          <ErrorBlock
+            title="An error occurred"
+            message={mutation.error.message || "Failed to delete event"}
           />
         )}
       </article>
