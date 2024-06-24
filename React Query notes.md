@@ -362,6 +362,10 @@
 
         If the mutation fails, use the `onError` callback to revert to the previous state.
 
+        => if backend fails, we roll back the data to the previous state
+        => if backend success, we update the data to the new state
+
+
         ```javascript
         onError: (err, newEvent, context) => {
         // Revert to the previous data
@@ -376,6 +380,8 @@
         ```javascript
         onSettled: (newEvent) => {
         // Refetch the event data
+        // what ever the mutation succeeds or fails you will get the latest data
+        // make sure that you fetched the latest data from the backend
         queryClient.invalidateQueries(["events", newEvent.id]);
         };
         ```
