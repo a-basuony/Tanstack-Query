@@ -34,6 +34,7 @@ export default function EditEvent() {
     },
     onError: (err, newEvent, context) => {
       // If the mutation fails, use the context returned from onMutate to roll back
+      // Revert to the previous data
       queryClient.setQueryData(["events", newEvent.id], context.previousEvent);
     },
     onSettled: (newEvent) => {
