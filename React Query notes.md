@@ -1,4 +1,4 @@
-# How to use Tanstak Query
+<!-- # How to use Tanstak Query
 
 # 1- install :
 
@@ -8,17 +8,20 @@
 
         Wrap your application with the QueryClientProvider at the root level. This makes the QueryClient available throughout your application.
         # Example
-            import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-            import App from './App';
 
-            // Create a client
-            const queryClient = new QueryClient();
+````javascript
+    import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+    import App from './App';
 
-            ReactDOM.render(
-                <QueryClientProvider client={queryClient}>
-                    <App />
-                </QueryClientProvider>
-            )
+    // Create a client
+    const queryClient = new QueryClient();
+
+    ReactDOM.render(
+        <QueryClientProvider client={queryClient}>
+            <App />
+        </QueryClientProvider>
+    )
+    ```
 
 # 3- Fetch Data with useQuery
 
@@ -142,9 +145,12 @@
                     <button>Search</button>
                 </form>
                 {content}
-        )
+        ) -->
 
 # 4- useMutation create, update, edit, delete (POST , UPDATE, PUT, PATCH, DELETE)
+
+<!--
+````javascript
 
     Mutation Function:
         This is the function that performs the data-modifying operation, such as an HTTP POST, PUT, PATCH, or DELETE request.
@@ -208,88 +214,89 @@
                         const { event } = await response.json();
 
                         return event;
-                    }
+                    } -->
 
-# 5- useQuery ( read (get) a specific event or single product)
+<!-- # 5- useQuery ( read (get) a specific event or single product) -->
 
-    1=> const { id } = useParams();
+`````javascript
+    // 1=> const { id } = useParams();
 
-    2=> const { data, isLoading, isError, error } = useQuery({
-                queryKey: ["event", id], // Include id in the queryKey to make it a complex to not cache and use the same id for the same data
-                queryFn: ({ signal }) => fetchEvent({ signal, id }),
-            });
+    // 2=> const { data, isLoading, isError, error } = useQuery({
+    //             queryKey: ["event", id], // Include id in the queryKey to make it a complex to not cache and use the same id for the same data
+    //             queryFn: ({ signal }) => fetchEvent({ signal, id }),
+    //         });
 
-    3=> {isLoading && <p>Loading...</p>}
-        {isError && <ErrorComp title={error.message}>}
-        {data && <h1>{data.title}</h1>}
+    // 3=> {isLoading && <p>Loading...</p>}
+    //     {isError && <ErrorComp title={error.message}>}
+    //     {data && <h1>{data.title}</h1>}
 
-    4=> export async function fetchEvent({ signal, id }) {
-                const response = await fetch(`http://localhost:3000/events/${id}`, {
-                    signal,
-                });
-                if (!response.ok) {
-                    const error = new Error("An error occurred while fetching the event");
-                    error.code = response.status;
-                    error.info = await response.json();
-                    throw error;
-                }
-                const { event } = await response.json();
-                return event;
-        }
+    // 4=> export async function fetchEvent({ signal, id }) {
+    //             const response = await fetch(`http://localhost:3000/events/${id}`, {
+    //                 signal,
+    //             });
+    //             if (!response.ok) {
+    //                 const error = new Error("An error occurred while fetching the event");
+    //                 error.code = response.status;
+    //                 error.info = await response.json();
+    //                 throw error;
+    //             }
+    //             const { event } = await response.json();
+    //             return event;
+    //     }
 
-# 6-useMutation for Delete (DELETE)
+// # 6-useMutation for Delete (DELETE)
 
-    1=>
-        const { id } = useParams();
-        const queryClient = new QueryClient();
-        const navigate = useNavigate();
+//     1=>
+//         const { id } = useParams();
+//         const queryClient = new QueryClient();
+//         const navigate = useNavigate();
 
-        <!-- const {mutate, isPending, isError, error} = useMutation({ --> // another way
-        <!-- const {mutate, isPending: loadingDelete, isError: isErrorDelete, error: errorDelete} = useMutation({ --> // another way
-        const mutation = useMutation({
-                mutationFn: deleteEvent,
-                onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["events"] });
-                navigate("/events");
-                },
-            });
+//         <!-- const {mutate, isPending, isError, error} = useMutation({ --> // another way
+//         <!-- const {mutate, isPending: loadingDelete, isError: isErrorDelete, error: errorDelete} = useMutation({ --> // another way
+//         const mutation = useMutation({
+//                 mutationFn: deleteEvent,
+//                 onSuccess: () => {
+//                 queryClient.invalidateQueries({ queryKey: ["events"] });
+//                 navigate("/events");
+//                 },
+//             });
 
-    2=>  function handleDelete() {
-            mutation.mutate({ id }); // Ensure id is passed as an object
-        }
+//     2=>  function handleDelete() {
+//             mutation.mutate({ id }); // Ensure id is passed as an object
+//         }
 
-    3=> <button onClick={handleDelete} className="button">
-                Delete
-              </button>
+//     3=> <button onClick={handleDelete} className="button">
+//                 Delete
+//               </button>
 
-    4=>
-          {mutation.isPending && <p>Deleting, please wait...</p>}
-          {!mutation.isPending && (
-            <div className="form-action">
-              <button onClick={handleEndDelete} className="button-text">
-                Cancel
-              </button>
-              <button onClick={handleDelete} className="button">
-                Delete
-              </button>
-            </div>
-          )}
-          {mutation.isError && (<ErrorBlock title={error.info?.message || "an error occurred"}/>) }
+//     4=>
+//           {mutation.isPending && <p>Deleting, please wait...</p>}
+//           {!mutation.isPending && (
+//             <div className="form-action">
+//               <button onClick={handleEndDelete} className="button-text">
+//                 Cancel
+//               </button>
+//               <button onClick={handleDelete} className="button">
+//                 Delete
+//               </button>
+//             </div>
+//           )}
+//           {mutation.isError && (<ErrorBlock title={error.info?.message || "an error occurred"}/>) }
 
 
-    3=> export async function deleteEvent({ id }) {
-            const response = await fetch(`http://localhost:3000/events/${id}`, {
-                method: "DELETE",
-            });
-            if (!response.ok) {
-                const error = new Error("An error occurred while deleting the event");
-                error.code = response.status;
-                error.info = await response.json();
-                throw error;
-            }
-            const { event } = await response.json();
-            return event;
-        }
+    // 3=> export async function deleteEvent({ id }) {
+    //         const response = await fetch(`http://localhost:3000/events/${id}`, {
+    //             method: "DELETE",
+    //         });
+    //         if (!response.ok) {
+    //             const error = new Error("An error occurred while deleting the event");
+    //             error.code = response.status;
+    //             error.info = await response.json();
+    //             throw error;
+    //         }
+    //         const { event } = await response.json();
+    //         return event;
+    //     }
 
 # 7- (Optimistic Updating) using useMutation with update (PUT)
 
@@ -477,7 +484,7 @@
 
 This approach ensures that your UI remains responsive and accurate, even in the face of potential network issues.
 
-```javascript
+````javascript
 const { mutate } = useMutation({
   mutationFn: updateEvent,
   onMutate: async (data) => {
@@ -497,7 +504,7 @@ const { mutate } = useMutation({
     queryClient.invalidateQueries(["events", newEvent.id]);
   },
 });
-```
+`````
 
 This setup uses React Query's `useMutation` hook to manage the event update process. Let's break it down:
 
@@ -614,6 +621,8 @@ Explanation:
    - `onMutate`: Cancels ongoing queries, stores the previous event data, and updates the cache optimistically.
    - `onError`: Rolls back to the previous event data if the mutation fails.
    - `onSettled`: Invalidates the query to refetch the latest data after the mutation.
+
+---
 
 7. Form submission handler:
 
