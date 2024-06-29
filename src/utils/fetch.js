@@ -4,7 +4,7 @@ export const queryClient = new QueryClient();
 
 export async function fetchEvents({ signal, searchTerm }) {
   console.log(searchTerm);
-  let url = "http://localhost:3000/events";
+  let url = "https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events";
 
   if (searchTerm) {
     url += "?search=" + searchTerm;
@@ -25,7 +25,7 @@ export async function fetchEvents({ signal, searchTerm }) {
 }
 
 export async function createNewEvent(eventData) {
-  const response = await fetch(`http://localhost:3000/events`, {
+  const response = await fetch(`https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events`, {
     method: "POST",
     body: JSON.stringify(eventData),
     headers: {
@@ -46,7 +46,7 @@ export async function createNewEvent(eventData) {
 }
 
 export async function fetchSelectableImages({ signal }) {
-  const response = await fetch(`http://localhost:3000/events/images`, {
+  const response = await fetch(`https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events/images`, {
     signal,
   });
 
@@ -63,7 +63,7 @@ export async function fetchSelectableImages({ signal }) {
 }
 
 export async function fetchEvent({ id, signal }) {
-  const response = await fetch(`http://localhost:3000/events/${id}`, {
+  const response = await fetch(`https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events/${id}`, {
     signal,
   });
 
@@ -80,7 +80,7 @@ export async function fetchEvent({ id, signal }) {
 }
 
 export async function deleteEvent({ id }) {
-  const response = await fetch(`http://localhost:3000/events/${id}`, {
+  const response = await fetch(`https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events/${id}`, {
     method: "DELETE",
   });
 
@@ -95,7 +95,7 @@ export async function deleteEvent({ id }) {
 }
 
 export async function updateEvent({ id, event }) {
-  const response = await fetch(`http://localhost:3000/events/${id}`, {
+  const response = await fetch(`https://eventscalendarapi-ahmed-basuonys-projects.vercel.app/events/${id}`, {
     method: "PUT",
     body: JSON.stringify({ event }),
     headers: {
